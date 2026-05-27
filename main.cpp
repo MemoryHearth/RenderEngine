@@ -2,9 +2,9 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-enum class CompileType;
+enum class ComponentType : uint8_t { VERTEX, FRAGMENT, SHADER };
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void checkCompile(unsigned int ID, CompileType type);
+void checkComponent(unsigned int ID, ComponentType type);
 
 const char* vertexShaderSourceCode = R"(
 #version 330 core
@@ -53,15 +53,15 @@ int main() {
 	glCompileShader(vertexShaderID);
 	glCompileShader(fragmentShaderID);
 
-	checkComponent(vertexShaderID, CompileType::VERTEX);
-	checkComponent(fragmentShaderID, CompileType::FRAGMENT);
+	checkComponent(vertexShaderID, ComponentType::VERTEX);
+	checkComponent(fragmentShaderID, ComponentType::FRAGMENT);
 
 	glAttachShader(shaderProgramID, vertexShaderID);
 	glAttachShader(shaderProgramID, fragmentShaderID);
 
 	glLinkProgram(shaderProgramID);
 
-	checkComponent(shaderProgramID, CompileType::SHADER);
+	checkComponent(shaderProgramID, ComponentType::SHADER);
 
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
@@ -106,13 +106,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
-enum class CompileType {VERTEX, FRAGMENT, SHADER};
-
-void checkComponent(unsigned int ID, CompileType type) {
+void checkComponent(unsigned int ID, ComponentType type) {
 	int success;
 	char infolog[512];
 	switch (type) {
-	case CompileType::SHADER:
+	case ComponentType::SHADER:
 		glGetProgramiv(ID, GL_LINK_STATUS, &success);
 		break;
 	default:
@@ -122,7 +120,7 @@ void checkComponent(unsigned int ID, CompileType type) {
 
 	if (!success) {
 		switch (type) {
-		case CompileType::SHADER:
+		case ComponentType::SHADER:
 			glGetProgramInfoLog(ID, 512, nullptr, infolog);
 			std::cout << "Program link error!" << std::endl;
 			break;
