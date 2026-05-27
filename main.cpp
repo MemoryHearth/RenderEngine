@@ -16,7 +16,7 @@ void main() {
 
 const char* fragmentShaderSourceCode = R"(
 #version 330 core
-vec4 FragColor;
+out vec4 FragColor;
 void main() {
 	FragColor = vec4(0.8, 0.9, 0.3, 1.0);
 }
@@ -53,10 +53,15 @@ int main() {
 	glCompileShader(vertexShaderID);
 	glCompileShader(fragmentShaderID);
 
+	checkComponent(vertexShaderID, CompileType::VERTEX);
+	checkComponent(fragmentShaderID, CompileType::FRAGMENT);
+
 	glAttachShader(shaderProgramID, vertexShaderID);
 	glAttachShader(shaderProgramID, fragmentShaderID);
 
 	glLinkProgram(shaderProgramID);
+
+	checkComponent(shaderProgramID, CompileType::SHADER);
 
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
@@ -103,7 +108,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 enum class CompileType {VERTEX, FRAGMENT, SHADER};
 
-void checkCompile(unsigned int ID, CompileType type) {
+void checkComponent(unsigned int ID, CompileType type) {
 	int success;
 	char infolog[512];
 	switch (type) {
