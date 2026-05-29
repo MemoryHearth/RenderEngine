@@ -1,26 +1,16 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <filesystem>
 #include <iostream>
 
-enum class ComponentType : uint8_t { VERTEX, FRAGMENT, SHADER };
+#include "Shader.h"
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void checkComponent(unsigned int ID, ComponentType type);
 
-const char* vertexShaderSourceCode = R"(
-#version 330 core
-layout (location = 0) in vec3 aPos;
-void main() {
-	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-}
-)";
-
-const char* fragmentShaderSourceCode = R"(
-#version 330 core
-out vec4 FragColor;
-void main() {
-	FragColor = vec4(0.8, 0.9, 0.3, 1.0);
-}
-)";
+std::string readFile(const std::string& path);
 
 int main() {
 	glfwInit();
@@ -43,32 +33,11 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
-	unsigned int vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	unsigned int fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	unsigned int shaderProgramID = glCreateProgram();
+	Shader shader("/shaders/basic.vert", "/shaders/basic.frag");
 
-	glShaderSource(vertexShaderID, 1, &vertexShaderSourceCode, nullptr);
-	glShaderSource(fragmentShaderID, 1, &fragmentShaderSourceCode, nullptr);
-
-	glCompileShader(vertexShaderID);
-	glCompileShader(fragmentShaderID);
-
-	checkComponent(vertexShaderID, ComponentType::VERTEX);
-	checkComponent(fragmentShaderID, ComponentType::FRAGMENT);
-
-	glAttachShader(shaderProgramID, vertexShaderID);
-	glAttachShader(shaderProgramID, fragmentShaderID);
-
-	glLinkProgram(shaderProgramID);
-
-	checkComponent(shaderProgramID, ComponentType::SHADER);
-
-	glDeleteShader(vertexShaderID);
-	glDeleteShader(fragmentShaderID);
-
-	float vertices[] = { -0.75f, 0.75f, 0.0f,
-		-0.75f, -0.75f, 0.0f,
-		0.0f, -0.75f, 0.0f 
+	float vertices[] = { -0.75f, 0.75f, 0.0f, 0.5f, 0.75f, 0.25f,
+		-0.75f, -0.75f, 0.0f, 0.5f, 0.25f, 0.75f,
+		0.0f, -0.75f, 0.0f, 0.5f, 0.25f, 0.75f
 	};
 
 	unsigned int VAO, VBO;
@@ -79,14 +48,19 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 
 	while (!glfwWindowShouldClose(window)) {
-		glClearColor(0.0f, 0.5f, 0.5f, 1.0f);
+		glClearColor(0.0f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(shaderProgramID);
+		shader.use();
+		float time = (float)glfwGetTime();
+		float brightnessValue = (sin(time) + 1.0f) / 2.0f;
+		shader.setFloat("brightness", brightnessValue);
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -96,7 +70,6 @@ int main() {
 
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
-	glDeleteProgram(shaderProgramID);
 
 	glfwTerminate();
 	return EXIT_SUCCESS;
@@ -107,27 +80,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void checkComponent(unsigned int ID, ComponentType type) {
-	int success;
-	char infolog[512];
-	switch (type) {
-	case ComponentType::SHADER:
-		glGetProgramiv(ID, GL_LINK_STATUS, &success);
-		break;
-	default:
-		glGetShaderiv(ID, GL_COMPILE_STATUS, &success);
-		break;
-	}
-
-	if (!success) {
-		switch (type) {
-		case ComponentType::SHADER:
-			glGetProgramInfoLog(ID, 512, nullptr, infolog);
-			std::cout << "Program link error!" << std::endl;
-			break;
-		default:
-			glGetShaderInfoLog(ID, 512, nullptr, infolog);
-			std::cout << ((int) type == 0 ? "Vertex" : "Fragment") << " compile error!" << std::endl;
-			break;
-		}
-	}
+	
 }
+
