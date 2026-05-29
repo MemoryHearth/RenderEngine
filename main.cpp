@@ -10,8 +10,6 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-std::string readFile(const std::string& path);
-
 int main() {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -78,8 +76,3 @@ int main() {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
-
-void checkComponent(unsigned int ID, ComponentType type) {
-	
-}
-
