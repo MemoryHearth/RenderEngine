@@ -1,5 +1,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -32,13 +35,59 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
+	glEnable(GL_DEPTH_TEST);
+
 	Shader shader("/shaders/basic.vert", "/shaders/basic.frag");
 
 	float vertices[] = {
-		-0.75f, 0.75f, 0.0f, 1.0f, 0.75f, 0.25f, 1.0f, 0.0f, // top left
-		-0.75f, -0.75f, 0.0f, 0.5f, 0.55f, 0.75f, 0.0f, 0.0f, // bottom left
-		0.0f, -0.75f, 0.0f, 0.5f, 0.55f, 0.75f, 0.0f, 1.0f, // bottom right
-		0.0f, 0.75f, 0.0f, 1.0f, 0.75f, 0.25f, 1.0f, 1.0f // top right
+		// konum (x,y,z)        // texture (s,t)
+		// Arka yüz
+		-0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+
+		// Ön yüz
+		-0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+
+		// Sol yüz
+		-0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+
+		// Sağ yüz
+		 0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+
+		 // Alt yüz
+		 -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
+		  0.5f, -0.5f, -0.5f,    1.0f, 1.0f,
+		  0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
+		  0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
+		 -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+		 -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
+
+		 // Üst yüz
+		 -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+		  0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+		  0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+		  0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+		 -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,
+		 -0.5f,  0.5f, -0.5f,    0.0f, 1.0f
 	};
 	
 	unsigned int indices[] = {
@@ -58,12 +107,10 @@ int main() {
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
 
 	unsigned int texture;
 	glGenTextures(1, &texture);
@@ -91,12 +138,40 @@ int main() {
 
 	while (!glfwWindowShouldClose(window)) {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		shader.use();
+
+		glm::vec3 cubeLocations[] = {
+			glm::vec3(0.0f,  0.0f,  -4.5f),
+			glm::vec3(3.0f,  3.0f, -4.5f),
+			glm::vec3(3.0f, 3.0f, -4.5f),
+			glm::vec3(3.0f, 3.0f, -4.5f),
+			glm::vec3(3.0f, 3.0f, -4.5f),
+			glm::vec3(3.0f, 3.0f, -4.5f),
+			glm::vec3(3.0f, 3.0f, -4.5f)
+		};
 
 		glBindTexture(GL_TEXTURE_2D, texture);
-		shader.use();
 		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		glm::mat4 view = glm::mat4(1.0f);
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 600.0f / 480.0f, 0.1f, 100.0f);
+
+		shader.setMat4("view", view);
+		shader.setMat4("projection", projection);
+
+		float time = (float)glfwGetTime();
+
+		for (int i = 0; i < 7; i++) {
+			
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(cubeLocations[i].x * sin(time + i), cubeLocations[i].y * cos(time + i), cubeLocations[i].z * ((sin(time) + 1.0f))));
+			shader.setMat4("model", model);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
